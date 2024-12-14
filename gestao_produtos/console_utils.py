@@ -5,14 +5,13 @@ Utilities useful to develop simple console/terminal/text-mode based applications
 import os
 import subprocess
 
+DEFAULT_INDENTATION = 3
 
 __all__ = [
     "accept",
     "show_msg",
     # TODO: terminar depois
 ]
-
-DEFAULT_INDENTATION = 3
 
 
 def accept(
@@ -29,10 +28,9 @@ def accept(
                 return convert_fn(value_str)
             except Exception:
                 pass
-        # we reached this point if the check failed or an exception was raised
-        show_msg(error_msg.format(value_str))
-        pause("")
-        cls()
+        # We reached this point if the check failed or an exception was raised
+        print(error_msg.format(value_str))  # Simulating the show_msg function
+        cls()  # Simulating the pause function
 
 
 #:

@@ -8,7 +8,7 @@ Programa para gestão do catálogo de produtos. Este programa permite:
 
 from decimal import Decimal as dec
 import re
-from typing import TextIO
+from typing import Iterable, TextIO
 
 
 CSV_DELIM = ","
@@ -19,8 +19,7 @@ PRODUCT_TYPES = {
 }
 
 
-class Produto:
-    # id, designacao,tipo/categoria,quantidade,preco unitário
+class Product:
     def __init__(
         self,
         id_: int,  # > 0 e cinco dígitos
@@ -33,7 +32,7 @@ class Produto:
         if id_ <= 0 or len(str(id_)) != 5:
             raise InvalidProdAttr(f"{id_=} inválido (deve ser > 0 e ter 5 dígitos)")
 
-        if not valida_nome(name):
+        if not Product.validate_name(name):
             raise InvalidProdAttr(f"{name=} inválido")
 
         if prod_type not in PRODUCT_TYPES:
@@ -55,14 +54,27 @@ class Produto:
     #:
 
     @classmethod
-    def from_csv(cls, csv: str, csv_delim=CSV_DELIM) -> "Produto":
+    def from_csv(cls, csv: str, csv_delim=CSV_DELIM) -> "Product":
         attrs = csv.split(csv_delim)
-        return Produto(
-            id_=int(attrs[0]),
-            name=attrs[1],
-            prod_type=attrs[2],
-            quantity=int(attrs[3]),
-            price=dec(attrs[4]),
+        return Product(
+            id_=int(attrs[0].strip()),
+            name=attrs[1].strip(),
+            prod_type=attrs[2].strip(),
+            quantity=int(attrs[3].strip()),
+            price=dec(attrs[4].strip()),
+        )
+
+    #:
+
+    def to_csv(self, csv_delim=CSV_DELIM) -> str:
+        return csv_delim.join(
+            (
+                str(self.id),
+                self.name,
+                self.prod_type,
+                str(self.quantity),
+                str(self.price),
+            )
         )
 
     #:
@@ -78,23 +90,27 @@ class Produto:
 
     #:
 
+    def __eq__(self, o) -> bool:
+        if not isinstance(o, Product):
+            return False
+        return self.id == o.id
+
+    #:
+
     @property
     def desc_tipo(self) -> str:
         return PRODUCT_TYPES[self.prod_type]
 
     #:
 
-
-#:
-
-
-def valida_nome(nome: str) -> bool:
-    com_acento = "ñãàáâäåéèêęēëóõôòöōíîìïįīúüùûūÑÃÀÁÂÄÅÉÈÊĘĒËÓÕÔÒÖŌÍÎÌÏĮĪÚÜÙÛŪ"
-    return bool(
-        re.fullmatch(
-            rf"[a-zA-Z{com_acento}]{{2,}}(\s+[a-zA-Z{com_acento}]{{2,}})*", nome
+    @staticmethod
+    def validate_name(name: str) -> bool:
+        regex = "ñãàáâäåéèêęēëóõôòöōíîìïįīúüùûūÑÃÀÁÂÄÅÉÈÊĘĒËÓÕÔÒÖŌÍÎÌÏĮĪÚÜÙÛŪ"
+        return bool(
+            re.fullmatch(rf"[a-zA-Z{regex}]{{2,}}(\s+[a-zA-Z{regex}]{{2,}})*", name)
         )
-    )
+
+    #:
 
 
 #:
@@ -110,42 +126,75 @@ class InvalidProdAttr(ValueError):
 
 
 class ProductCollection:
-    def __init__(self):
-        self._produtos: list[Produto] = []
+    def __init__(self, initial_values: Iterable[Product] = ()):
+        self._products: list[Product] = []
+        for prod in initial_values:
+            self.append(prod)
 
     #:
 
     @classmethod
-    def from_csv(cls, csv_path: str) -> "ProductCollection":
+    def from_csv(cls, csv_path: str, encoding="UTF-8") -> "ProductCollection":
         prods = ProductCollection()
-        with open(csv_path, "rt") as file:
+        with open(csv_path, "rt", encoding=encoding) as file:
             for line in relevant_lines(file):
-                prods.append(Produto.from_csv(line))
+                prods.append(Product.from_csv(line))
         return prods
 
     #:
 
-    def append(self, novo_prod: Produto):
-        if self.search_by_id(novo_prod.id):
-            raise DuplicateValue(f"Produto já existe com id {novo_prod.id}")
-        self._produtos.append(novo_prod)
+    def export_to_csv(self, csv_path: str, encoding="UTF-8"):
+        if len(self._products) == 0:
+            raise ValueError("Coleccção vazia")
+        with open(csv_path, "wt", encoding=encoding) as file:
+            for prod in self._products:
+                print(prod.to_csv(), file=file)
 
     #:
 
-    def search_by_id(self, id_: int) -> Produto | None:
-        for prod in self._produtos:
+    def append(self, novo_prod: Product):
+        if self.search_by_id(novo_prod.id):
+            raise DuplicateValue(f"Produto já existe com id {novo_prod.id}")
+        self._products.append(novo_prod)
+
+    #:
+
+    def search_by_id(self, id_: int) -> Product | None:
+        for prod in self._products:
             if prod.id == id_:
                 return prod
         return None
 
     #:
 
+    def search(self, find_fn):
+        for prod in self._products:
+            if find_fn(prod):
+                yield prod
+
+    #:
+
     def __iter__(self):
-        for prod in self._produtos:
+        for prod in self._products:
             yield prod
 
+    #:
+
+    def __len__(self) -> int:
+        return len(self._products)
+
+    #:
+
+    def remove_by_id(self, id_: int) -> Product | None:
+        prod = self.search_by_id(id_)
+        if prod:
+            self._products.remove(prod)
+        return prod
+
+    #:
+
     def _dump(self):
-        for prod in self._produtos:
+        for prod in self._products:
             print(prod)
 
     #:
