@@ -52,12 +52,12 @@ def exec_menu():
                 exec_search_by_type()
             case "A" | "ACRESCENTAR":
                 exec_add_product()
-            case "E" | "ELIMINAR":
-                exec_remove_product()
-            case "G" | "GUARDAR":
-                exec_save_products()
-            case "T" | "TERMINAR":
-                exec_end()
+            # case "E" | "ELIMINAR":
+            #     exec_remove_product()
+            # case "G" | "GUARDAR":
+            #     exec_save_products()
+            # case "T" | "TERMINAR":
+            #     exec_end()
             case _:
                 print("Opção inválida")
 
