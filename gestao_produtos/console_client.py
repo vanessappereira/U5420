@@ -72,8 +72,8 @@ def exec_menu():
                     exec_add_product()
                 case "E" | "ELIMINAR":
                     exec_remove_product()
-                # case "G" | "GUARDAR":
-                # exec_save_products()
+                case "G" | "GUARDAR":
+                    exec_save_products()
                 case "T" | "TERMINAR":
                     exec_end()
                 case _:
@@ -241,6 +241,15 @@ def display_product_types():
 
 
 #:
+# Save products
+def exec_save_products():
+    prods_collection.export_to_csv(PRODUCTS_CSV_PATH)
+    print(f"Produtos salvos em {PRODUCTS_CSV_PATH} ")
+
+
+#:
+
+
 # Remove product by id
 def exec_remove_product():
     try:
