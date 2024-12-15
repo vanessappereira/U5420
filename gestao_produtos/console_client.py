@@ -1,7 +1,7 @@
 import sys
 from decimal import Decimal as dec
 
-from console_utils import accept, ask, show_msg, pause, cls
+from console_utils import accept, ask, show_msg, pause, confirm, cls
 from product_management import (
     Product,
     PRODUCT_TYPES,
@@ -13,6 +13,17 @@ PRODUCTS_CSV_PATH = "products.csv"
 prods_collection = ProductCollection
 prod = Product
 prods_types: dict = PRODUCT_TYPES
+
+# Menu Options
+MENU_OPTIONS = {
+    "L": "Listar catálogo",
+    "P": "Pesquisar por id",
+    "PT": "Pesquisar por tipo",
+    "A": "Acrescentar produto",
+    "E": "Eliminar produto",
+    "G": "Guardar catálogo em ficheiro",
+    "T": "Terminar programa",
+}
 
 
 # Main
@@ -47,25 +58,28 @@ def exec_menu():
         show_msg("┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛")
         print()
 
-        option = ask("Opção: ")
+        option = ask("Opção: ").upper()
 
-        match option.upper():
-            case "L" | "LISTAR":
-                exec_list_products()
-            case "P" | "PESQUISAR":
-                exec_search_by_id()
-            case "PT" | "TIPO":
-                exec_search_by_type()
-            case "A" | "ACRESCENTAR":
-                exec_add_product()
-            case "E" | "ELIMINAR":
-                exec_remove_product()
-            case "G" | "GUARDAR":
-                exec_save_products()
-            case "T" | "TERMINAR":
-                exec_end()
-            case _:
-                print("Opção inválida")
+        if option in MENU_OPTIONS:
+            match option:
+                case "L" | "LISTAR":
+                    exec_list_products()
+                case "P" | "PESQUISAR":
+                    exec_search_by_id()
+                case "PT" | "TIPO":
+                    exec_search_by_type()
+                case "A" | "ACRESCENTAR":
+                    exec_add_product()
+                case "E" | "ELIMINAR":
+                    exec_remove_product()
+                # case "G" | "GUARDAR":
+                # exec_save_products()
+                case "T" | "TERMINAR":
+                    exec_end()
+                case _:
+                    print("Opção inválida")
+        else:
+            print("Opção inválida")
 
 
 #:
@@ -107,6 +121,7 @@ def exec_search_by_id():
         error_msg="ID {} inválido. Por favor, tente novamente.",
         convert_fn=int,
     )
+
     if product := prods_collection.search_by_id(id):
         show_msg(f"Produto encontrado: {product.name}")
         print()
@@ -151,58 +166,69 @@ def display_product_types():
 # Add product
 def exec_add_product():
     enter_menu("Adicionar produto")
-    new_prod_id = accept(
-        msg="Indique o id do produto a adicionar: ",
-        error_msg="ID {} inválido. Por favor, tente novamente.",
-        check_fn=int,
-    )
-    if prods_collection.search_by_id(new_prod_id):
-        show_msg(f"Produto com o id {new_prod_id} já existe.")
-    else:
+
+    while True:
+        new_prod_id = accept(
+            msg="Indique o id do produto a adicionar: ",
+            error_msg="ID {} inválido. Por favor, tente novamente.",
+            check_fn=int,
+        )
+
+        # Validate the ID
         prod.validate_id(new_prod_id)
-        try:
-            new_prod_name = accept(
-                msg="Indique o nome do produto a adicionar: ",
-                error_msg="Nome {} inválido. Por favor, tente novamente.",
-            )
-            prod.validate_name(new_prod_name)
 
-            display_product_types()
-            new_prod_type = accept(
-                msg="Indique o tipo do produto a adicionar: ",
-                error_msg="Tipo {} inválido. Por favor, tente novamente.",
-                check_fn=lambda product: product in PRODUCT_TYPES,
+        # Check if the ID already exists
+        if prods_collection.search_by_id(int(new_prod_id)):
+            show_msg(
+                f"Produto com o id {new_prod_id} já existe. Por favor, tente novamente."
             )
-            prod.validate_product_type
+            print()
+        else:
+            break  # Exit the loop if the ID is unique
 
-            new_prod_qnty = accept(
-                msg="Indique a quantidade do produto a adicionar: ",
-                error_msg="Quantidade {} inválida. Por favor, tente novamente.",
-                check_fn=int,
-            )
-            prod.validate_quantity(new_prod_qnty)
+    try:
+        new_prod_name = accept(
+            msg="Indique o nome do produto a adicionar: ",
+            error_msg="Nome {} inválido. Por favor, tente novamente.",
+        )
+        prod.validate_name(new_prod_name)
 
-            new_prod_price = accept(
-                msg="Indique o preço do produto a adicionar: ",
-                error_msg="Preço {} inválido. Por favor, tente novamente.",
-                check_fn=dec,
-            )
-            prod.validate_price(new_prod_price)
+        display_product_types()
+        new_prod_type = accept(
+            msg="Indique o tipo do produto a adicionar: ",
+            error_msg="Tipo {} inválido. Por favor, tente novamente.",
+            check_fn=lambda product: product in PRODUCT_TYPES,
+        )
+        prod.validate_product_type
 
-            new_product = Product(
-                id_=new_prod_id,
-                name=new_prod_name,
-                prod_type=new_prod_type,
-                qnty=new_prod_qnty,
-                prod_price=new_prod_price,
-            )
-            prods_collection.append(new_product)
+        new_prod_qnty = accept(
+            msg="Indique a quantidade do produto a adicionar: ",
+            error_msg="Quantidade {} inválida. Por favor, tente novamente.",
+            check_fn=int,
+        )
+        prod.validate_quantity(new_prod_qnty)
 
-            # Save to file
-            prods_collection.export_to_csv(PRODUCTS_CSV_PATH)
-            print(f"Novo produto adicionado: {prods_collection._dump} ")
-        except InvalidAttr as err:
-            print(err)
+        new_prod_price = accept(
+            msg="Indique o preço do produto a adicionar: ",
+            error_msg="Preço {} inválido. Por favor, tente novamente.",
+            check_fn=dec,
+        )
+        prod.validate_price(new_prod_price)
+
+        new_product = Product(
+            id_=new_prod_id,
+            name=new_prod_name,
+            prod_type=new_prod_type,
+            qnty=new_prod_qnty,
+            prod_price=new_prod_price,
+        )
+        prods_collection.append(new_product)
+
+        # Save to file
+        prods_collection.export_to_csv(PRODUCTS_CSV_PATH)
+        print(f"Novo produto adicionado: {prods_collection._dump} ")
+    except InvalidAttr as err:
+        print(err)
 
 
 #:
@@ -212,6 +238,34 @@ def display_product_types():
     for code, prod_type in prods_types.items():
         show_msg(f"   {code}   |   {prod_type}")
         show_msg("┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛")
+
+
+#:
+# Remove product by id
+def exec_remove_product():
+    try:
+        prod_id = accept(
+            msg="Indique o ID do produto a remover: ",
+            error_msg="ID {} inválido. Por favor, tente novamente.",
+            check_fn=int,
+        )
+
+        # Validate the ID
+        prod.validate_id(prod_id)
+
+        # Check if the ID already exists, if does, remove product
+        if prods_collection.search_by_id(int(prod_id)):
+            show_msg(f"Produto com o id {prod_id} encontrado. ")
+
+            # user confirmation
+            if confirm("Deseja remover o produto?"):
+                prods_collection.remove_by_id(int(prod_id))
+                prods_collection.export_to_csv(PRODUCTS_CSV_PATH)
+                show_msg(f"Produto com o id {prod_id} removido. ")
+            print()
+
+    except InvalidAttr as err:
+        print(err)
 
 
 def exec_end():
