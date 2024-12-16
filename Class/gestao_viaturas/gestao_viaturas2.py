@@ -1,21 +1,3 @@
-"""
-Programa para gestão do catÃ¡logo de viaturas. Este programa permitirÃ¡:
-    - Listar o catÃ¡logo
-    - Pesquisar por alguns campos 
-    - Eliminar um registo do catÃ¡logo
-    - Guardar o catÃ¡logo em ficheiro
-
-o Construtor alternativo Viatura, CSV
-
-o Métodos __str__
-
-o Property ano da matricula
-
-o VehicleCollection com I/O (mas utilizar dicionÃ¡rio)
-
-
-"""
-
 from datetime import date
 import re
 
@@ -23,21 +5,21 @@ import re
 class Viatura:
 
     def __init__(
-            self,
-            matricula: str,  # matricula: DD-LL-DD onde D: DÃ­gito L: Letra
-            marca: str,      # marca: deve ter uma ou mais palavras (apenas letras ou dÃ­gitos)
-            modelo: str,     # modelo: mesmo que a marca
-            data: str,       # data: deve vir no formato ISO: 'YYYY-MM-DD'
+        self,
+        matricula: str,  # matricula: DD-LL-DD onde D: DÃ­gito L: Letra
+        marca: str,  # marca: deve ter uma ou mais palavras (apenas letras ou dÃ­gitos)
+        modelo: str,  # modelo: mesmo que a marca
+        data: str,  # data: deve vir no formato ISO: 'YYYY-MM-DD'
     ):
         # 1. Validar
         if not valida_matricula(matricula):
-            raise InvalidAttr(f'MatrÃ­cula invÃ¡lida: {matricula}')
+            raise InvalidAttr(f"Matrícula inválida: {matricula}")
 
         if not valida_marca(marca):
-            raise InvalidAttr(f'Marca invÃ¡lida: {marca}')
+            raise InvalidAttr(f"Marca inválida: {marca}")
 
         if not valida_modelo(modelo):
-            raise InvalidAttr(f'Modelo invÃ¡lido: {modelo}')
+            raise InvalidAttr(f"Modelo inválida: {modelo}")
 
         # 2. Definir objecto
         self.matricula = matricula
@@ -49,28 +31,41 @@ class Viatura:
             self.mes = dt.month
             self.dia = dt.day
         except ValueError:
-            raise InvalidAttr(f'Data invÃ¡lida: {data}')
+            raise InvalidAttr(f"Data invÃ¡lida: {data}")
+
     #:
 
     @property
     def data(self) -> date:
         return date(self.ano, self.mes, self.dia)
 
+
 #:
+
 
 def valida_matricula(matricula: str) -> bool:
-    return bool(re.fullmatch(r'[0-9]{2}-[A-Z]{2}-[0-9]{2}', matricula))
+    return bool(re.fullmatch(r"[0-9]{2}-[A-Z]{2}-[0-9]{2}", matricula))
+
+
 #:
 
+
 def valida_matricula2(matricula: str) -> bool:
-    partes = matricula.split('-')
+    partes = matricula.split("-")
     return (
-            len(partes) == 3
+        len(partes) == 3
         and (partes[0].isdigit() and len(partes[0]) == 2)
-        and (partes[1].isalpha() and len(partes[1]) == 2 and partes[1] == partes[1].upper())
+        and (
+            partes[1].isalpha()
+            and len(partes[1]) == 2
+            and partes[1] == partes[1].upper()
+        )
         and (partes[2].isdigit() and len(partes[2]) == 2)
     )
+
+
 #:
+
 
 def valida_marca(marca: str) -> bool:
     """
@@ -78,6 +73,8 @@ def valida_marca(marca: str) -> bool:
     """
     palavras = marca.split()
     return len(palavras) >= 1 and all(palavra.isalnum() for palavra in palavras)
+
+
 #:
 
 # def valida_marca(marca: str) -> bool:
@@ -91,14 +88,20 @@ def valida_marca(marca: str) -> bool:
 #     return True
 # #:
 
+
 def valida_modelo(modelo):
     return valida_marca(modelo)
+
+
 #:
+
 
 class InvalidAttr(ValueError):
     """
     Invalid Product Attribute.
     """
+
+
 #:
 
 """

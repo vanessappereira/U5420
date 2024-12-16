@@ -8,6 +8,10 @@ PRODUCTS_CSV_PATH = "products.csv"
 prods_collection: ProductCollection
 prods_types: dict = PRODUCT_TYPES
 
+"""
+c:\>Set-ExecutionsPolicy - ExecutionPolicy RemoteSigned - Scope CurrentUser
+"""
+
 
 def main():
     global prods_collection
