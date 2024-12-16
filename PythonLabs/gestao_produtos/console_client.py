@@ -9,6 +9,9 @@ from product_management import (
     InvalidAttr,
 )
 
+"""
+C:\>Set-ExecutionsPolicy - ExecutionPolicy RemoteSigned - Scope CurrentUser
+"""
 PRODUCTS_CSV_PATH = "products.csv"
 prods_collection = ProductCollection
 prod = Product
